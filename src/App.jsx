@@ -5,6 +5,9 @@ export default function AssemblyEndgame() {
 	// Create a state to track the current word
 	const [currentWord, setCurrentWord] = useState("react");
 
+	// State to hold user gueses
+	const [userGuesses, setUserGuesses] = useState(new Set());
+
 	// Alphabet for the keyboard
 	const alphabet = "abcdefghijklmnopqrstuvwxyz";
 
@@ -29,11 +32,25 @@ export default function AssemblyEndgame() {
 	// Creating the keyboard elements
 	const keyboardElements = alphabet.split("").map((letter) => {
 		return (
-			<button key={letter} value={letter}>
+			<button
+				key={letter}
+				value={letter}
+				onClick={() => {
+					handleGuess(letter);
+				}}
+			>
 				{letter.toUpperCase()}
 			</button>
 		);
 	});
+
+	// Handle letter guess
+	function handleGuess(letter) {
+		const currentGuess = userGuesses;
+		userGuesses.add(letter);
+		setUserGuesses(currentGuess);
+		console.log(currentGuess);
+	}
 
 	// Final return statement
 	return (
