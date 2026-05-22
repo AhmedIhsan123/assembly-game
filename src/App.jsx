@@ -9,17 +9,26 @@ export default function AssemblyEndgame() {
 	// State to hold user gueses
 	const [userGuesses, setUserGuesses] = useState(new Set());
 
+	// Derived values
+	let wrongGuessCount = 0;
+	userGuesses.forEach((guess) => {
+		if (!currentWord.includes(guess)) wrongGuessCount++;
+	});
+	const isGameOver = wrongGuessCount > 7;
+
 	// Alphabet for the keyboard
 	const alphabet = "abcdefghijklmnopqrstuvwxyz";
 
 	// Creating our languages elements
-	const languageElements = languages.map((lang) => {
+	const languageElements = languages.map((lang, index) => {
+		const isLanguageLost = index < wrongGuessCount;
+		const className = clsx("chip", isLanguageLost && "lost");
 		const styles = {
 			backgroundColor: lang.backgroundColor,
 			color: lang.color,
 		};
 		return (
-			<span className="chip" style={styles} key={lang.name}>
+			<span className={className} style={styles} key={lang.name}>
 				{lang.name}
 			</span>
 		);
@@ -27,7 +36,11 @@ export default function AssemblyEndgame() {
 
 	// Creating the secret word spans
 	const wordElements = currentWord.split("").map((letter, index) => {
-		return <span key={index}>{letter.toUpperCase()}</span>;
+		return (
+			<span key={index}>
+				{userGuesses.has(letter) ? letter.toUpperCase() : ""}
+			</span>
+		);
 	});
 
 	// Creating the keyboard elements
@@ -39,7 +52,7 @@ export default function AssemblyEndgame() {
 			correct: isCorrect,
 			wrong: isWrong,
 		});
-		console.log(className);
+
 		return (
 			<button
 				className={className}
@@ -76,7 +89,7 @@ export default function AssemblyEndgame() {
 			<section className="language-chips">{languageElements}</section>
 			<section className="word">{wordElements}</section>
 			<section className="keyboard">{keyboardElements}</section>
-			<button className="new-game">New Game</button>
+			{isGameOver && <button className="new-game">New Game</button>}
 		</main>
 	);
 }
