@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { languages } from "./languages.js";
+import clsx from "clsx";
 
 export default function AssemblyEndgame() {
 	// Create a state to track the current word
@@ -31,8 +32,17 @@ export default function AssemblyEndgame() {
 
 	// Creating the keyboard elements
 	const keyboardElements = alphabet.split("").map((letter) => {
+		const isGuessed = userGuesses.has(letter);
+		const isCorrect = isGuessed && currentWord.includes(letter);
+		const isWrong = isGuessed && !currentWord.includes(letter);
+		const className = clsx({
+			correct: isCorrect,
+			wrong: isWrong,
+		});
+		console.log(className);
 		return (
 			<button
+				className={className}
 				key={letter}
 				value={letter}
 				onClick={() => {
@@ -46,10 +56,7 @@ export default function AssemblyEndgame() {
 
 	// Handle letter guess
 	function handleGuess(letter) {
-		const currentGuess = userGuesses;
-		userGuesses.add(letter);
-		setUserGuesses(currentGuess);
-		console.log(currentGuess);
+		setUserGuesses((prev) => new Set(prev).add(letter));
 	}
 
 	// Final return statement
