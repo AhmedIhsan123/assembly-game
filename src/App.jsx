@@ -1,36 +1,42 @@
 import { useState } from "react";
-import { languages } from "./languages.js";
-import clsx from "clsx";
+import { clsx } from "clsx";
+import { languages } from "./languages";
+import { getFarewellText } from "./utils";
 
 export default function AssemblyEndgame() {
-	// Create a state to track the current word
+	// State values
 	const [currentWord, setCurrentWord] = useState("react");
-
-	// State to hold user gueses
-	const [userGuesses, setUserGuesses] = useState(new Set());
+	const [guessedLetters, setGuessedLetters] = useState([]);
 
 	// Derived values
-	let wrongGuessCount = 0;
-	userGuesses.forEach((guess) => {
-		if (!currentWord.includes(guess)) wrongGuessCount++;
-	});
+	const wrongGuessCount = guessedLetters.filter(
+		(letter) => !currentWord.includes(letter),
+	).length;
 	const isGameWon = currentWord
 		.split("")
-		.every((letter) => userGuesses.has(letter));
+		.every((letter) => guessedLetters.includes(letter));
 	const isGameLost = wrongGuessCount >= languages.length - 1;
 	const isGameOver = isGameWon || isGameLost;
+	const lastGuessedLetter = guessedLetters[guessedLetters.length - 1];
+	const isLastGuessIncorrect =
+		lastGuessedLetter && !currentWord.includes(lastGuessedLetter);
 
-	// Alphabet for the keyboard
+	// Static values
 	const alphabet = "abcdefghijklmnopqrstuvwxyz";
 
-	// Creating our languages elements
+	function addGuessedLetter(letter) {
+		setGuessedLetters((prevLetters) =>
+			prevLetters.includes(letter) ? prevLetters : [...prevLetters, letter],
+		);
+	}
+
 	const languageElements = languages.map((lang, index) => {
 		const isLanguageLost = index < wrongGuessCount;
-		const className = clsx("chip", isLanguageLost && "lost");
 		const styles = {
 			backgroundColor: lang.backgroundColor,
 			color: lang.color,
 		};
+		const className = clsx("chip", isLanguageLost && "lost");
 		return (
 			<span className={className} style={styles} key={lang.name}>
 				{lang.name}
@@ -38,18 +44,16 @@ export default function AssemblyEndgame() {
 		);
 	});
 
-	// Creating the secret word spans
-	const wordElements = currentWord.split("").map((letter, index) => {
-		return (
+	const letterElements = currentWord
+		.split("")
+		.map((letter, index) => (
 			<span key={index}>
-				{userGuesses.has(letter) ? letter.toUpperCase() : ""}
+				{guessedLetters.includes(letter) ? letter.toUpperCase() : ""}
 			</span>
-		);
-	});
+		));
 
-	// Creating the keyboard elements
 	const keyboardElements = alphabet.split("").map((letter) => {
-		const isGuessed = userGuesses.has(letter);
+		const isGuessed = guessedLetters.includes(letter);
 		const isCorrect = isGuessed && currentWord.includes(letter);
 		const isWrong = isGuessed && !currentWord.includes(letter);
 		const className = clsx({
@@ -61,10 +65,7 @@ export default function AssemblyEndgame() {
 			<button
 				className={className}
 				key={letter}
-				value={letter}
-				onClick={() => {
-					handleGuess(letter);
-				}}
+				onClick={() => addGuessedLetter(letter)}
 			>
 				{letter.toUpperCase()}
 			</button>
@@ -74,17 +75,16 @@ export default function AssemblyEndgame() {
 	const gameStatusClass = clsx("game-status", {
 		won: isGameWon,
 		lost: isGameLost,
+		farewell: !isGameOver && isLastGuessIncorrect,
 	});
 
-	// Handle letter guess
-	function handleGuess(letter) {
-		setUserGuesses((prev) => new Set(prev).add(letter));
-	}
-
-	// Handle game status display
 	function renderGameStatus() {
-		if (!isGameOver) {
-			return null;
+		if (!isGameOver && isLastGuessIncorrect) {
+			return (
+				<p className="farewell-message">
+					{getFarewellText(languages[wrongGuessCount - 1].name)}
+				</p>
+			);
 		}
 
 		if (isGameWon) {
@@ -94,7 +94,8 @@ export default function AssemblyEndgame() {
 					<p>Well done! 🎉</p>
 				</>
 			);
-		} else {
+		}
+		if (isGameLost) {
 			return (
 				<>
 					<h2>Game over!</h2>
@@ -102,9 +103,10 @@ export default function AssemblyEndgame() {
 				</>
 			);
 		}
+
+		return null;
 	}
 
-	// Final return statement
 	return (
 		<main>
 			<header>
@@ -114,10 +116,15 @@ export default function AssemblyEndgame() {
 					from Assembly!
 				</p>
 			</header>
+
 			<section className={gameStatusClass}>{renderGameStatus()}</section>
+
 			<section className="language-chips">{languageElements}</section>
-			<section className="word">{wordElements}</section>
+
+			<section className="word">{letterElements}</section>
+
 			<section className="keyboard">{keyboardElements}</section>
+
 			{isGameOver && <button className="new-game">New Game</button>}
 		</main>
 	);
