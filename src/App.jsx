@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { clsx } from "clsx";
 import { languages } from "./languages";
-import { getFarewellText } from "./utils";
+import { getFarewellText, getRandomWord } from "./utils";
 
 export default function AssemblyEndgame() {
 	// State values
-	const [currentWord, setCurrentWord] = useState("react");
+	const [currentWord, setCurrentWord] = useState(() => getRandomWord());
 	const [guessedLetters, setGuessedLetters] = useState([]);
 
 	// Derived values
@@ -111,6 +111,11 @@ export default function AssemblyEndgame() {
 		return null;
 	}
 
+	function handleNewGame() {
+		setCurrentWord(getRandomWord());
+		setGuessedLetters([]);
+	}
+
 	return (
 		<main>
 			<header>
@@ -144,7 +149,11 @@ export default function AssemblyEndgame() {
 				</p>
 			</section>
 			<section className="keyboard">{keyboardElements}</section>
-			{isGameOver && <button className="new-game">New Game</button>}
+			{isGameOver && (
+				<button className="new-game" onClick={() => handleNewGame()}>
+					New Game
+				</button>
+			)}
 		</main>
 	);
 }
